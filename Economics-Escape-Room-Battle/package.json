@@ -1,1 +1,11 @@
-{"name":"econ-escape-battle","private":true,"type":"module","scripts":{"build":"node scripts/build.mjs","test":"node tests/api.test.mjs","dev":"node scripts/preview.mjs"}}
+{
+    "name": "econ-escape-battle",
+    "private": true,
+    "type": "module",
+    "scripts": {
+      "build": "node scripts/build.mjs",
+      "start": "node scripts/preview.mjs",
+      "test": "node tests/api.test.mjs",
+      "dev": "node scripts/preview.mjs"
+    }
+  }
