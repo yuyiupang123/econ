@@ -1,0 +1,13 @@
+import {readFileSync,writeFileSync,mkdirSync,copyFileSync} from 'node:fs';
+import {QUESTIONS,ROOMS,SETTINGS} from '../src/questions.mjs';
+import {QUESTIONS as LEGACY_QUESTIONS} from '../src/legacy-questions.mjs';
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+const html=read('src/app.html'),css=read('src/style.css'),client=read('src/client.js');
+const make=offline=>html.replace('__STYLE__',css).replace('__SCRIPT__',()=>client.replace('__MODE__',String(offline)).replace('__QUESTIONS__',()=>JSON.stringify(offline?QUESTIONS:[])).replace('__ROOMS__',()=>JSON.stringify(ROOMS)).replace('__SETTINGS__',()=>JSON.stringify(SETTINGS)).replace('__QUESTION_HELPERS__',()=>read('src/questions.mjs').slice(read('src/questions.mjs').indexOf('export function localiseQuestion')).replaceAll('export function ','function ')));
+const online=make(false),offline=make(true);
+mkdirSync('dist/server',{recursive:true});mkdirSync('dist/.openai',{recursive:true});mkdirSync('downloads',{recursive:true});
+let worker=read('src/worker.mjs').replace("import {QUESTIONS,SETTINGS,localiseQuestion,localiseFeedback,feedbackText} from './questions.mjs';",()=>read('src/questions.mjs').replaceAll('export const ','const ').replaceAll('export function ','function ')).replace("import {QUESTIONS as LEGACY_QUESTIONS} from './legacy-questions.mjs';",()=>`const LEGACY_QUESTIONS=${JSON.stringify(LEGACY_QUESTIONS)};`).replace("import legacyWorker from './legacy-worker.mjs';",()=>`const legacyWorker=(()=>{const QUESTIONS=LEGACY_QUESTIONS;${read('src/legacy-worker.mjs').replace("const HTML = '__ONLINE_HTML__';","const HTML = '';").replace("const OFFLINE = '__OFFLINE_HTML__';","const OFFLINE = '';").replace("import {QUESTIONS} from './legacy-questions.mjs';",'').replace('export default ','return ')};})();`);
+worker=worker.replace("'__ONLINE_HTML__'",()=>JSON.stringify(online)).replace("'__OFFLINE_HTML__'",()=>JSON.stringify(offline));
+writeFileSync('dist/server/index.js',worker);writeFileSync('downloads/Economics-Escape-Room-Battle.html',offline);writeFileSync('downloads/online-preview.html',online);
+copyFileSync('.openai/hosting.json','dist/.openai/hosting.json');
+console.log('Built online Worker + standalone offline HTML.');

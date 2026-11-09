@@ -1,0 +1,1 @@
+ALTER TABLE rooms ADD COLUMN question_set TEXT NOT NULL DEFAULT 'legacy12';
